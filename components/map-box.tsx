@@ -1,7 +1,14 @@
 'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -9,45 +16,81 @@ interface MapBoxProps {
     lat: number;
     lng: number;
     zoom?: number;
-    onChange?: (lat: number, lng: number) => void; // callback khi marker di chuyển
+    onChange?: (lat: number, lng: number) => void;
 }
 
-export default function MapBox({ lat, lng, zoom = 12, onChange }: Readonly<MapBoxProps>) {
+const MAP_STYLES: Record<string, string> = {
+    Streets: "mapbox://styles/mapbox/streets-v12",
+    Satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+    Light: "mapbox://styles/mapbox/light-v11",
+    Dark: "mapbox://styles/mapbox/dark-v11",
+};
+
+export default function MapBox({
+    lat,
+    lng,
+    zoom = 15,
+    onChange,
+}: Readonly<MapBoxProps>) {
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const markerRef = useRef<mapboxgl.Marker | null>(null);
+    const [style, setStyle] = useState(MAP_STYLES.Streets);
 
     useEffect(() => {
-        if (!mapContainerRef.current) return;
-
-        // Khởi tạo map
+        if (mapRef.current || !mapContainerRef.current) return;
         mapRef.current = new mapboxgl.Map({
             container: mapContainerRef.current,
-            style: "mapbox://styles/mapbox/streets-v11",
-            center: [lng, lat],
-            zoom,
+            style: style,
+            center: [106.70014, 10.87065],
+            zoom: 10,
+            pitch: 45,
+            bearing: -17.6,
+            antialias: true,
         });
 
-        // Marker draggable
-        markerRef.current = new mapboxgl.Marker({ draggable: true })
-            .setLngLat([lng, lat])
+        new mapboxgl.Marker({ color: "#d4ae6f" })
+            .setLngLat([106.70014, 10.87065])
             .addTo(mapRef.current);
 
-        // Lắng nghe sự kiện kéo marker
-        markerRef.current.on("dragend", () => {
-            const pos = markerRef.current!.getLngLat();
-            onChange?.(pos.lat, pos.lng);
+        mapRef.current.on("load", () => {
+            mapRef.current?.resize();
         });
 
-        return () => {
-            mapRef.current?.remove();
-        };
+
     }, []);
 
+
+    // 🔁 Đổi map style
+    // useEffect(() => {
+    //     if (!mapRef.current) return;
+    //     mapRef.current.setStyle(style);
+    // }, [style]);
+
     return (
-        <div
-            ref={mapContainerRef}
-            className="w-full h-full rounded-xl overflow-hidden"
-        />
+        <div className="relative w-full h-full">
+            <div
+                id="map"
+                ref={mapContainerRef}
+                className="w-full h-full overflow-hidden"
+            />
+            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-2xl rounded-md p-1 space-y-3 shadow-lg text-sm">
+                {/* Map style */}
+                <Select
+                    value={style}
+                    onValueChange={(value) => setStyle(value)}
+                >
+                    <SelectContent className="bg-white/20 backdrop-blur-md">
+                        {Object.entries(MAP_STYLES).map(([name, url]) => (
+                            <SelectItem key={url} value={url}>
+                                {name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                    <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Map Style" />
+                    </SelectTrigger>
+                </Select>
+            </div>
+        </div>
     );
 }
