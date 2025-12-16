@@ -1,0 +1,1 @@
+export const MIN_ZOOM_SHOW = 10;

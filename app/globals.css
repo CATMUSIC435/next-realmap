@@ -1,6 +1,18 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@layer utilities {
+  .text-2xs {
+    font-size: 0.625rem; /* 10px */
+    line-height: 0.75rem; /* 12px */
+  }
+
+  .text-3xs {
+    font-size: 0.5rem; /* 8px */
+    line-height: 0.625rem; /* 10px */
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "components/map-box.jsx"  ],
   "exclude": ["node_modules"]
 }
