@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Share2, Facebook, Twitter, Copy, Check, MessageCircle } from "lucide-react";
+import { Share2, Facebook, Twitter, Copy, Check, MessageCircle, QrCode } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface ProjectShareButtonProps {
   slug: string;
@@ -10,6 +11,7 @@ interface ProjectShareButtonProps {
 export default function ProjectShareButton({ slug, title }: ProjectShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(`https://dxmdvietnam.vn/du-an/${slug}`);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +110,36 @@ export default function ProjectShareButton({ slug, title }: ProjectShareButtonPr
         >
            {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
         </button>
+
+        <button 
+          onClick={() => {
+            setIsOpen(false);
+            setShowQr(true);
+          }} 
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform bg-white text-gray-900 border border-gray-200"
+          title="Chia sẻ qua Mã QR"
+        >
+           <QrCode className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
       </div>
+
+      <Dialog open={showQr} onOpenChange={setShowQr}>
+        <DialogContent aria-describedby={undefined} className="w-[90vw] max-w-sm bg-white border-0 shadow-2xl rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center gap-4">
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-gray-900">Quét Mã QR</DialogTitle>
+          <p className="text-gray-500 text-sm text-center leading-relaxed px-2">
+            Sử dụng camera hoặc ứng dụng Zalo để quét mã và mở dự án <span className="font-semibold text-gray-800">{title}</span> lập tức.
+          </p>
+          <div className="p-4 bg-white rounded-2xl shadow-inner border border-gray-100 flex items-center justify-center mt-2">
+            {currentUrl && (
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}&margin=10`} 
+                alt={`QR Code ${title}`} 
+                className="w-[200px] h-[200px] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
