@@ -31,10 +31,9 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
 
   const setRouteType = useCallback((type: 'project' | 'model') => {
     setRouteTypeState(type);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('dest', type);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
+    // Sử dụng History API thay vì Next Router để ngăn Next.js re-render page gậy giật/reload map
+    window.history.replaceState(null, '', `${pathname}?dest=${type}`);
+  }, [pathname]);
 
   const [showManualInput, setShowManualInput] = useState(false);
   const [locationError, setLocationError] = useState("");

@@ -92,12 +92,12 @@ export default function SingleMapCard({
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         </Button>
 
-        {(project.acf?.video_tiktok || project.acf?.video_youtube) && (
+        {(project.acf?.video_tiktok || project.acf?.video_youtube || project.acf?.tin_tuc || project.acf?.facebook_post) && (
           <Button 
             onClick={onOpenVideo}
             variant="outline"
             size="icon"
-            title="Xem Video Review"
+            title="Thư Viện Truyền Thông"
             className="rounded-[10px] sm:rounded-xl h-9 w-9 sm:h-11 sm:w-11 border-gray-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 hover:border-red-200 relative group overflow-hidden"
           >
             <Youtube className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
