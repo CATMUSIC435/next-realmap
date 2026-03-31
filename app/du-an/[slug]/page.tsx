@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import SingleMap from "@/components/single-map";
 import { notFound } from "next/navigation";
 
-export default async function ProjectSingleMapPage({ params }: { params: { slug: string } }) {
-  // In Next.js App Router (newer versions), params might need to be awaited or used directly
-  const slug = params.slug || (await params).slug;
+export default async function ProjectSingleMapPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
   
   try {
     const res = await fetch(`https://dxmdvietnam.vn/wp-json/wp/v2/du-an?slug=${slug}`, { 
@@ -42,11 +43,13 @@ export default async function ProjectSingleMapPage({ params }: { params: { slug:
 
     return (
       <div className="h-screen w-screen bg-gray-50 overflow-hidden">
-        <SingleMap 
-          project={cleanProject} 
-          lat={coords.lat} 
-          lng={coords.lng} 
-        />
+        <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-gray-100"><div className="w-8 h-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div></div>}>
+          <SingleMap 
+            project={cleanProject} 
+            lat={coords.lat} 
+            lng={coords.lng} 
+          />
+        </Suspense>
       </div>
     );
   } catch (error) {

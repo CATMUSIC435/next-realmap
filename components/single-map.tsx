@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import BackButton from "./map/BackButton";
@@ -8,6 +9,8 @@ import SingleMapCard from "./map/SingleMapCard";
 import dynamic from "next/dynamic";
 
 const SingleProjectInfoSheet = dynamic(() => import("./map/SingleProjectInfoSheet"), { ssr: false });
+const SingleProjectVideoSheet = dynamic(() => import("./map/SingleProjectVideoSheet"), { ssr: false });
+import ProjectShareButton from "./map/ProjectShareButton";
 
 export default function SingleMap({ project, lat, lng }: { project: any, lat: number, lng: number }) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -16,17 +19,33 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
   const modelMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const [isRouting, setIsRouting] = useState(false);
   const [routeDistance, setRouteDistance] = useState<string | null>(null);
+  const [routeType, setRouteTypeState] = useState<'project' | 'model'>(
+    searchParams.get('dest') === 'model' ? 'model' : 'project'
+  );
+
+  const setRouteType = useCallback((type: 'project' | 'model') => {
+    setRouteTypeState(type);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('dest', type);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
 
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualAddress, setManualAddress] = useState("");
   const [locationError, setLocationError] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
+  const userLocationRef = useRef<{lng: number, lat: number} | null>(null);
 
   // Mở Sheet thông tin
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   // Debounced search for suggestions
   useEffect(() => {
@@ -153,14 +172,27 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
     };
   }, [lat, lng, project]);
 
+  const getTargetCoords = () => {
+    if (routeType === 'model' && project.acf?.vị_tri_nha_mẫu) {
+      const parts = project.acf.vị_tri_nha_mẫu.split(",");
+      if (parts.length >= 2) {
+        return { tLat: parseFloat(parts[0]), tLng: parseFloat(parts[1]) };
+      }
+    }
+    return { tLat: lat, tLng: lng };
+  };
+
   const handleGoogleMapsDirections = () => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    const { tLat, tLng } = getTargetCoords();
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${tLat},${tLng}`, '_blank');
   };
 
   const renderRouteOnMap = async (userLng: number, userLat: number) => {
+    userLocationRef.current = { lng: userLng, lat: userLat };
+    const { tLat, tLng } = getTargetCoords();
     try {
       const query = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLng},${userLat};${lng},${lat}?steps=true&geometries=geojson&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLng},${userLat};${tLng},${tLat}?steps=true&geometries=geojson&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
         { method: 'GET' }
       );
       const json = await query.json();
@@ -201,7 +233,7 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
         }
 
         const bounds = new mapboxgl.LngLatBounds([userLng, userLat], [userLng, userLat]);
-        bounds.extend([lng, lat]);
+        bounds.extend([tLng, tLat]);
         mapRef.current.fitBounds(bounds, { padding: 80, speed: 1.2 });
       }
     } catch (err) {
@@ -209,6 +241,13 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
       alert("Không thể tải tuyến đường, vui lòng thử lại sau.");
     }
   };
+
+  useEffect(() => {
+    if (userLocationRef.current) {
+      renderRouteOnMap(userLocationRef.current.lng, userLocationRef.current.lat);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeType]);
 
   const drawMapboxRoute = () => {
     setLocationError("");
@@ -303,15 +342,30 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
         project={project}
         distance={routeDistance}
         isRouting={isRouting}
+        routeType={routeType}
+        onRouteTypeChange={setRouteType}
         onDrawRoute={drawMapboxRoute}
         onOpenGoogleMaps={handleGoogleMapsDirections}
         onOpenInfo={() => setIsInfoOpen(true)}
+        onOpenVideo={() => setIsVideoOpen(true)}
       />
 
       <SingleProjectInfoSheet 
         slug={project.slug} 
         isOpen={isInfoOpen} 
         onOpenChange={setIsInfoOpen} 
+      />
+
+      <SingleProjectVideoSheet 
+        slug={project.slug} 
+        isOpen={isVideoOpen} 
+        onOpenChange={setIsVideoOpen} 
+        projectData={project}
+      />
+
+      <ProjectShareButton 
+        slug={project.slug} 
+        title={project.title?.rendered || project.title || "Dự án"} 
       />
     </div>
   );

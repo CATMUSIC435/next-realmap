@@ -63,6 +63,9 @@ export default function SingleProjectInfoSheet({
 
   const acf = projectData?.acf || {};
 
+  // Standard Typography classes for safely rendering WordPress HTML Content responsively
+  const htmlProseClasses = "prose max-w-none prose-sm sm:prose-base prose-img:w-full prose-img:h-auto prose-img:rounded-xl prose-a:text-blue-600 prose-p:break-words text-gray-700 text-justify leading-relaxed sm:leading-loose";
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[700px] md:max-w-[800px] lg:max-w-[900px] overflow-y-auto overflow-x-hidden no-scrollbar font-sans border-l border-gray-200 shadow-2xl p-0 bg-white">
@@ -85,14 +88,14 @@ export default function SingleProjectInfoSheet({
           <div className="flex flex-col min-h-full bg-white relative pb-12">
             
             {/* Header Sticky - Tabs Navigation */}
-            <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-200 pt-16 sm:pt-12 pb-3 px-6 flex items-end gap-8 overflow-x-auto no-scrollbar shadow-sm min-h-[80px]">
+            <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-200 pt-16 sm:pt-14 pb-1 sm:pb-3 px-4 sm:px-6 flex items-end gap-5 sm:gap-8 overflow-x-auto no-scrollbar shadow-sm min-h-[75px] sm:min-h-[80px] overscroll-contain touch-pan-x snap-x snap-mandatory">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap px-1 pb-2 text-[15px] sm:text-[16px] font-bold transition-all duration-300 uppercase tracking-widest relative outline-none
+                    className={`whitespace-nowrap px-2 sm:px-1 pb-3 sm:pb-2 text-[14px] sm:text-[16px] font-bold transition-all duration-300 uppercase tracking-wider sm:tracking-widest relative outline-none snap-center
                       ${isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}
                     `}
                   >
@@ -126,9 +129,22 @@ export default function SingleProjectInfoSheet({
                            <Image src={acf.logo_white} alt="Logo" fill className="object-contain object-left drop-shadow-lg" />
                         </div>
                       )}
-                      <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 shadow-sm text-left">
-                        {acf.tq_title || projectData.title?.rendered}
-                      </h2>
+                      <div className="flex flex-wrap items-center gap-4 mb-2">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white shadow-sm text-left">
+                          {acf.tq_title || projectData.title?.rendered}
+                        </h2>
+                        {acf.link_page && (
+                          <a 
+                            href={acf.link_page.startsWith('http') ? acf.link_page : `https://${acf.link_page}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 text-[10px] sm:text-xs font-bold uppercase rounded-full transition-all shadow-lg hover:shadow-xl"
+                          >
+                            Web Dự Án
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        )}
+                      </div>
                       {acf.tq_title_sub && (
                         <p className="text-base sm:text-lg text-yellow-500 font-semibold mb-3 drop-shadow-md tracking-wider uppercase">
                           {acf.tq_title_sub}
@@ -160,20 +176,20 @@ export default function SingleProjectInfoSheet({
                     ) : null}
                     
                     {/* Giới thiệu text */}
-                    <div className="prose prose-blue max-w-none text-gray-600">
+                    <div className="mt-8">
                       {acf.gt_desc ? (
                         <p className="text-base leading-loose text-justify whitespace-pre-line text-gray-700">
                           {acf.gt_desc}
                         </p>
                       ) : projectData.excerpt?.rendered ? (
-                        <div className="text-base leading-loose text-justify text-gray-700" dangerouslySetInnerHTML={{__html: projectData.excerpt.rendered}} />
+                        <div className={htmlProseClasses} dangerouslySetInnerHTML={{__html: projectData.excerpt.rendered}} />
                       ) : (
                         <p className="text-base text-gray-500 italic">Đang cập nhật thông tin giới thiệu.</p>
                       )}
                       
                       {projectData.content?.rendered && (
                         <div 
-                          className="mt-6 text-gray-700 text-justify"
+                          className={`mt-6 ${htmlProseClasses}`}
                           dangerouslySetInnerHTML={{__html: projectData.content.rendered}}
                         />
                       )}
@@ -197,7 +213,7 @@ export default function SingleProjectInfoSheet({
                   )}
 
                   {acf.vt_content && (
-                    <div className="prose prose-blue max-w-none text-gray-700 text-base leading-loose" dangerouslySetInnerHTML={{__html: acf.vt_content}} />
+                    <div className={htmlProseClasses} dangerouslySetInnerHTML={{__html: acf.vt_content}} />
                   )}
                 </div>
               )}
@@ -211,7 +227,7 @@ export default function SingleProjectInfoSheet({
                   </div>
 
                   {acf.ti_desc && (
-                    <div className="prose max-w-none text-gray-700 text-base leading-loose mb-8 text-justify" dangerouslySetInnerHTML={{__html: acf.ti_desc}} />
+                    <div className={`${htmlProseClasses} mb-8`} dangerouslySetInnerHTML={{__html: acf.ti_desc}} />
                   )}
 
                   {(acf.ti_list && Array.isArray(acf.ti_list)) && (
@@ -241,7 +257,7 @@ export default function SingleProjectInfoSheet({
                   </div>
 
                   {acf.mb_content && (
-                    <div className="prose max-w-none text-gray-700 text-base leading-loose mb-8 text-justify" dangerouslySetInnerHTML={{__html: acf.mb_content}} />
+                    <div className={`${htmlProseClasses} mb-8`} dangerouslySetInnerHTML={{__html: acf.mb_content}} />
                   )}
 
                   {acf.mb_img && (
@@ -261,7 +277,7 @@ export default function SingleProjectInfoSheet({
                   </div>
 
                   {acf.sp_desc && (
-                    <div className="prose max-w-none text-gray-700 text-base leading-loose mb-8 text-justify" dangerouslySetInnerHTML={{__html: acf.sp_desc}} />
+                    <div className={`${htmlProseClasses} mb-8`} dangerouslySetInnerHTML={{__html: acf.sp_desc}} />
                   )}
 
                   {(acf.sp_list && Array.isArray(acf.sp_list)) && (
