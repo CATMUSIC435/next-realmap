@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
@@ -10,11 +10,11 @@ interface SingleProjectInfoSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function SingleProjectInfoSheet({
+const SingleProjectInfoSheet = ({
   slug,
   isOpen,
   onOpenChange
-}: SingleProjectInfoSheetProps) {
+}: SingleProjectInfoSheetProps) => {
   const [projectData, setProjectData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -332,4 +332,6 @@ export default function SingleProjectInfoSheet({
       </SheetContent>
     </Sheet>
   );
-}
+};
+
+export default React.memo(SingleProjectInfoSheet);

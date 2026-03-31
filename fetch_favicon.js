@@ -1,0 +1,1 @@
+fetch('https://dxmdvietnam.vn').then(r=>r.text()).then(t=>{ const m=t.match(/<link[^>]*rel="icon"[^>]*href="([^"]+)"/i) || t.match(/<link[^>]*rel="shortcut icon"[^>]*href="([^"]+)"/i); console.log(m ? m[1] : 'not found'); })

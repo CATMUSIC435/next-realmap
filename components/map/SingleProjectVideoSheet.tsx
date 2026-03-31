@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Carousel,
@@ -79,12 +79,12 @@ function NewsCard({ link, idx, getNewsTitle }: { link: string; idx: number; getN
   );
 }
 
-export default function SingleProjectVideoSheet({
+const SingleProjectVideoSheet = ({
   slug,
   isOpen,
   onOpenChange,
   projectData
-}: SingleProjectVideoSheetProps) {
+}: SingleProjectVideoSheetProps) => {
   const [activeTab, setActiveTab] = useState("video");
   
   // Reset tab when newly opened
@@ -372,4 +372,6 @@ export default function SingleProjectVideoSheet({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default React.memo(SingleProjectVideoSheet);

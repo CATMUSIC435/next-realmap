@@ -84,19 +84,19 @@ const MapboxExample = ({ lat, lng }) => {
   }, [lat, lng]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || projects.length === 0) return;
 
     const addMarkers = () => {
+      // Phá cũ tạo mới chỉ chạy 1 lần khi mảng projects API thay đổi (lần đầu load), cực nhẹ
       markersRef.current.forEach((m) => m.marker.remove());
       markersRef.current = [];
 
-      filteredProjects.forEach((estate) => {
-        // Container cho mapbox control (Mapbox sẽ set inline transform lên đây)
-        // Cần có kích thước chính xác để Mapbox tính toán origin "center" đúng vị trí
+      projects.forEach((estate) => {
         const elContainer = document.createElement("div");
         elContainer.className = "w-12 h-12 cursor-pointer transition-all duration-300 z-10 hover:z-20";
+        // Check hiển thị lần đầu
+        elContainer.style.display = 'block';
 
-        // Phần nội dung (chứa hình ảnh, áp dụng hiệu ứng scale/shadow)
         const innerEl = document.createElement("div");
         innerEl.className = "w-full h-full rounded-full bg-white border-2 border-white shadow-md overflow-hidden transition-all duration-300 hover:scale-[1.15]";
         innerEl.style.backgroundImage = `url(${estate.image})`;
@@ -118,6 +118,12 @@ const MapboxExample = ({ lat, lng }) => {
 
         markersRef.current.push({ marker, elContainer, innerEl, id: estate.id });
       });
+      
+      // Kích hoạt lại vòng lặp cập nhật display ngay sau khi tạo xong (đề phòng việc search đã diễn ra)
+      markersRef.current.forEach(({ elContainer, id }) => {
+        const isVisible = filteredProjects.some(p => p.id === id);
+        elContainer.style.display = isVisible ? 'block' : 'none';
+      });
     };
 
     if (mapRef.current.isStyleLoaded()) {
@@ -125,6 +131,19 @@ const MapboxExample = ({ lat, lng }) => {
     } else {
       mapRef.current.on("load", addMarkers);
     }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects]); // Chỉ phụ thuộc vào projects gốc, không phụ thuộc filteredProjects
+
+  // Effect thứ hai siêu nhanh: Chỉ lặp qua DOM List và CSS Toggles, Render Speed 0ms
+  useEffect(() => {
+    markersRef.current.forEach(({ elContainer, id }) => {
+      const isVisible = filteredProjects.some(p => p.id === id);
+      elContainer.style.display = isVisible ? 'block' : 'none';
+      if (!isVisible) {
+        elContainer.style.zIndex = '10'; // trả về index nếu đang bị hide
+      }
+    });
   }, [filteredProjects]);
 
   return (

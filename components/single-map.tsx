@@ -37,39 +37,12 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
   }, [searchParams, pathname, router]);
 
   const [showManualInput, setShowManualInput] = useState(false);
-  const [manualAddress, setManualAddress] = useState("");
   const [locationError, setLocationError] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestionsList, setShowSuggestionsList] = useState(false);
   const userLocationRef = useRef<{lng: number, lat: number} | null>(null);
 
   // Mở Sheet thông tin
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-
-  // Debounced search for suggestions
-  useEffect(() => {
-    if (!manualAddress.trim() || manualAddress.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        const query = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(manualAddress)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true&limit=5&country=VN`
-        );
-        const json = await query.json();
-        if (json.features) {
-          setSuggestions(json.features);
-        }
-      } catch (err) {
-        console.error("Autocomplete failed:", err);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [manualAddress]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -274,46 +247,14 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
     );
   };
 
-  const handleSelectSuggestion = async (place: any) => {
-    setManualAddress(place.place_name);
-    setShowSuggestionsList(false);
-    setSuggestions([]);
-
+  const handleLocationSelected = async (lng: number, lat: number) => {
     setIsRouting(true);
     setLocationError("");
     try {
-      const [userLng, userLat] = place.center;
-      await renderRouteOnMap(userLng, userLat);
+      await renderRouteOnMap(lng, lat);
     } catch (err) {
       console.error("Routing from suggestion failed:", err);
       setLocationError("Lỗi tìm đường, xin thử lại sau.");
-    } finally {
-      setIsRouting(false);
-    }
-  };
-
-  const handleManualRoute = async () => {
-    if (!manualAddress.trim()) return;
-    setIsRouting(true);
-    setLocationError("");
-    setShowSuggestionsList(false);
-    try {
-      const geoQuery = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(manualAddress)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=1&country=VN`
-      );
-      const geoJson = await geoQuery.json();
-
-      if (!geoJson.features || geoJson.features.length === 0) {
-        setLocationError("Không tìm thấy địa chỉ này! Vui lòng thử lại.");
-        setIsRouting(false);
-        return;
-      }
-
-      const [userLng, userLat] = geoJson.features[0].center;
-      await renderRouteOnMap(userLng, userLat);
-    } catch (err) {
-      console.error("Geocoding failed:", err);
-      setLocationError("Lỗi tìm kiếm, xin thử lại sau.");
     } finally {
       setIsRouting(false);
     }
@@ -325,17 +266,11 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
 
       <BackButton />
 
-      <LocationInput
+      <LocationInput 
         show={showManualInput}
-        address={manualAddress}
-        onAddressChange={setManualAddress}
-        error={locationError}
-        suggestions={suggestions}
-        onSelectSuggestion={handleSelectSuggestion}
-        showSuggestions={showSuggestionsList}
-        setShowSuggestions={setShowSuggestionsList}
+        onLocationSelected={handleLocationSelected}
         isRouting={isRouting}
-        onSearch={handleManualRoute}
+        error={locationError}
       />
 
       <SingleMapCard
