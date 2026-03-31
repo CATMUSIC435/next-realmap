@@ -1,0 +1,318 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import BackButton from "./map/BackButton";
+import LocationInput from "./map/LocationInput";
+import SingleMapCard from "./map/SingleMapCard";
+import dynamic from "next/dynamic";
+
+const SingleProjectInfoSheet = dynamic(() => import("./map/SingleProjectInfoSheet"), { ssr: false });
+
+export default function SingleMap({ project, lat, lng }: { project: any, lat: number, lng: number }) {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const modelMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+
+  const [isRouting, setIsRouting] = useState(false);
+  const [routeDistance, setRouteDistance] = useState<string | null>(null);
+
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestionsList, setShowSuggestionsList] = useState(false);
+
+  // Mở Sheet thông tin
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+
+  // Debounced search for suggestions
+  useEffect(() => {
+    if (!manualAddress.trim() || manualAddress.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const query = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(manualAddress)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true&limit=5&country=VN`
+        );
+        const json = await query.json();
+        if (json.features) {
+          setSuggestions(json.features);
+        }
+      } catch (err) {
+        console.error("Autocomplete failed:", err);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [manualAddress]);
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+
+    if (!mapRef.current) {
+      mapRef.current = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: "mapbox://styles/mapbox/standard",
+        center: [lng, lat],
+        zoom: 15,
+      });
+    }
+
+    const addMarker = () => {
+      if (markerRef.current) markerRef.current.remove();
+      if (modelMarkerRef.current) modelMarkerRef.current.remove();
+
+      const hasModelCoords = !!project.acf?.vị_tri_nha_mẫu;
+      const isSameLocation = hasModelCoords && project.acf?.vị_tri_nha_mẫu === project.acf?.vị_tri;
+
+      // --- PROJECT MARKER ---
+      const elContainer = document.createElement("div");
+      elContainer.className = "relative w-16 h-16 cursor-pointer z-30 flex items-center justify-center flex-col group";
+
+      const innerEl = document.createElement("div");
+      innerEl.className = "w-14 h-14 rounded-full bg-white border-[3px] border-blue-600 shadow-xl overflow-hidden transition-transform duration-300 group-hover:scale-110 group-hover:shadow-2xl";
+      innerEl.style.backgroundImage = `url(${project.acf?.banner_img || project.acf?.logo || project.image || '/images/default.jpg'})`;
+      innerEl.style.backgroundSize = "cover";
+      innerEl.style.backgroundPosition = "center";
+      
+      const labelEl = document.createElement("div");
+      labelEl.className = "absolute -bottom-8 whitespace-nowrap bg-blue-600/95 backdrop-blur-md text-white px-3 py-1 text-[11px] font-bold rounded-full shadow-lg border-2 border-white uppercase tracking-wider transition-transform duration-300 group-hover:-translate-y-1";
+      labelEl.innerText = "Vị Trí Dự Án";
+
+      elContainer.appendChild(innerEl);
+      elContainer.appendChild(labelEl);
+
+      elContainer.addEventListener("click", () => setIsInfoOpen(true));
+
+      if (mapRef.current) {
+        markerRef.current = new mapboxgl.Marker({ element: elContainer })
+          .setLngLat([lng, lat])
+          .addTo(mapRef.current);
+      }
+
+      // --- MODEL HOUSE MARKER ---
+      if (hasModelCoords) {
+        const parts = project.acf.vị_tri_nha_mẫu.split(",");
+        if (parts.length >= 2) {
+          const modelLat = parseFloat(parts[0]);
+          const modelLng = parseFloat(parts[1]);
+
+          const modelContainer = document.createElement("div");
+          modelContainer.className = "relative w-16 h-16 cursor-pointer z-20 flex items-center justify-center flex-col group";
+          
+          const innerModelEl = document.createElement("div");
+          innerModelEl.className = "w-11 h-11 rounded-full bg-rose-50 border-[3px] border-rose-500 shadow-xl flex items-center justify-center text-rose-500 font-bold bg-white transition-transform duration-300 group-hover:scale-110 group-hover:shadow-2xl";
+          innerModelEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
+          
+          const labelModelEl = document.createElement("div");
+          labelModelEl.className = "absolute -bottom-8 whitespace-nowrap bg-rose-600/95 backdrop-blur-md text-white px-3 py-1 text-[11px] font-bold rounded-full shadow-lg border-2 border-white uppercase tracking-wider transition-transform duration-300 group-hover:-translate-y-1";
+          labelModelEl.innerText = "Nhà Mẫu / Sales";
+
+          modelContainer.appendChild(innerModelEl);
+          modelContainer.appendChild(labelModelEl);
+
+          modelContainer.addEventListener("click", () => setIsInfoOpen(true));
+
+          // If they overlap exactly, offset the model house marker by ~70 pixels to the right
+          const pointOffset: mapboxgl.PointLike = isSameLocation ? [70, 0] : [0, 0];
+
+          if (mapRef.current) {
+            modelMarkerRef.current = new mapboxgl.Marker({ element: modelContainer, offset: pointOffset })
+              .setLngLat([modelLng, modelLat])
+              .addTo(mapRef.current);
+            
+            // Adjust bounds to fit both markers if they are different
+            if (!isSameLocation) {
+              const bounds = new mapboxgl.LngLatBounds([lng, lat], [lng, lat]);
+              bounds.extend([modelLng, modelLat]);
+              mapRef.current.fitBounds(bounds, { padding: 100, maxZoom: 15 });
+            }
+          }
+        }
+      }
+    };
+
+    if (mapRef.current.isStyleLoaded()) {
+      addMarker();
+    } else {
+      mapRef.current.on("load", addMarker);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [lat, lng, project]);
+
+  const handleGoogleMapsDirections = () => {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+  };
+
+  const renderRouteOnMap = async (userLng: number, userLat: number) => {
+    try {
+      const query = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLng},${userLat};${lng},${lat}?steps=true&geometries=geojson&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+        { method: 'GET' }
+      );
+      const json = await query.json();
+      if (!json.routes || json.routes.length === 0) {
+        alert("Không thể tìm thấy đường đi từ vị trí này!");
+        return;
+      }
+
+      const data = json.routes[0];
+      const route = data.geometry;
+
+      if (data.distance) {
+        setRouteDistance((data.distance / 1000).toFixed(1) + " km");
+      }
+
+      if (mapRef.current) {
+        if (userMarkerRef.current) userMarkerRef.current.remove();
+
+        const userEl = document.createElement("div");
+        userEl.className = "w-6 h-6 bg-blue-600 rounded-full border-4 border-white shadow-lg shadow-blue-500/50 flex items-center justify-center animate-pulse";
+        userMarkerRef.current = new mapboxgl.Marker(userEl)
+          .setLngLat([userLng, userLat])
+          .addTo(mapRef.current);
+
+        if (mapRef.current.getSource('route')) {
+          (mapRef.current.getSource('route') as mapboxgl.GeoJSONSource).setData(route);
+        } else {
+          mapRef.current.addLayer({
+            id: 'route',
+            type: 'line',
+            source: {
+              type: 'geojson',
+              data: route
+            },
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': '#2563eb', 'line-width': 6, 'line-opacity': 0.8 }
+          });
+        }
+
+        const bounds = new mapboxgl.LngLatBounds([userLng, userLat], [userLng, userLat]);
+        bounds.extend([lng, lat]);
+        mapRef.current.fitBounds(bounds, { padding: 80, speed: 1.2 });
+      }
+    } catch (err) {
+      console.error("Failed to fetch Mapbox directions:", err);
+      alert("Không thể tải tuyến đường, vui lòng thử lại sau.");
+    }
+  };
+
+  const drawMapboxRoute = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError("Trình duyệt không hỗ trợ định vị. Vui lòng tự nhập vị trí.");
+      setShowManualInput(true);
+      return;
+    }
+
+    setIsRouting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        await renderRouteOnMap(position.coords.longitude, position.coords.latitude);
+        setIsRouting(false);
+      },
+      (error) => {
+        console.error(error);
+        setIsRouting(false);
+        setLocationError("Đã từ chối quyền truy cập vị trí. Vui lòng nhập thủ công.");
+        setShowManualInput(true);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  const handleSelectSuggestion = async (place: any) => {
+    setManualAddress(place.place_name);
+    setShowSuggestionsList(false);
+    setSuggestions([]);
+
+    setIsRouting(true);
+    setLocationError("");
+    try {
+      const [userLng, userLat] = place.center;
+      await renderRouteOnMap(userLng, userLat);
+    } catch (err) {
+      console.error("Routing from suggestion failed:", err);
+      setLocationError("Lỗi tìm đường, xin thử lại sau.");
+    } finally {
+      setIsRouting(false);
+    }
+  };
+
+  const handleManualRoute = async () => {
+    if (!manualAddress.trim()) return;
+    setIsRouting(true);
+    setLocationError("");
+    setShowSuggestionsList(false);
+    try {
+      const geoQuery = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(manualAddress)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=1&country=VN`
+      );
+      const geoJson = await geoQuery.json();
+
+      if (!geoJson.features || geoJson.features.length === 0) {
+        setLocationError("Không tìm thấy địa chỉ này! Vui lòng thử lại.");
+        setIsRouting(false);
+        return;
+      }
+
+      const [userLng, userLat] = geoJson.features[0].center;
+      await renderRouteOnMap(userLng, userLat);
+    } catch (err) {
+      console.error("Geocoding failed:", err);
+      setLocationError("Lỗi tìm kiếm, xin thử lại sau.");
+    } finally {
+      setIsRouting(false);
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full bg-gray-50">
+      <div ref={mapContainerRef} className="w-full h-full" />
+
+      <BackButton />
+
+      <LocationInput
+        show={showManualInput}
+        address={manualAddress}
+        onAddressChange={setManualAddress}
+        error={locationError}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSelectSuggestion}
+        showSuggestions={showSuggestionsList}
+        setShowSuggestions={setShowSuggestionsList}
+        isRouting={isRouting}
+        onSearch={handleManualRoute}
+      />
+
+      <SingleMapCard
+        project={project}
+        distance={routeDistance}
+        isRouting={isRouting}
+        onDrawRoute={drawMapboxRoute}
+        onOpenGoogleMaps={handleGoogleMapsDirections}
+        onOpenInfo={() => setIsInfoOpen(true)}
+      />
+
+      <SingleProjectInfoSheet 
+        slug={project.slug} 
+        isOpen={isInfoOpen} 
+        onOpenChange={setIsInfoOpen} 
+      />
+    </div>
+  );
+}
