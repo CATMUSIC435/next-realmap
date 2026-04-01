@@ -50,7 +50,7 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
     if (!mapRef.current) {
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/standard",
+        style: "mapbox://styles/mapbox/streets-v12",
         center: [lng, lat],
         zoom: 15,
       });
@@ -157,6 +157,16 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
   const handleGoogleMapsDirections = () => {
     const { tLat, tLng } = getTargetCoords();
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${tLat},${tLng}`, '_blank');
+  };
+
+  const handleGrabDirections = () => {
+    const { tLat, tLng } = getTargetCoords();
+    const destName = encodeURIComponent(project.title?.rendered || project.title || "Dự án");
+    window.open(`https://app.grab.com/action/open?screenType=BOOKING&dropOffLatitude=${tLat}&dropOffLongitude=${tLng}&dropOffTitle=${destName}`, '_blank');
+  };
+
+  const handleXanhSMDirections = () => {
+    alert("Tính năng gọi xe Xanh SM đang được tích hợp. Vui lòng thử lại sau!");
   };
 
   const renderRouteOnMap = async (userLng: number, userLat: number) => {
@@ -280,6 +290,8 @@ export default function SingleMap({ project, lat, lng }: { project: any, lat: nu
         onRouteTypeChange={setRouteType}
         onDrawRoute={drawMapboxRoute}
         onOpenGoogleMaps={handleGoogleMapsDirections}
+        onOpenGrab={handleGrabDirections}
+        onOpenXanhSM={handleXanhSMDirections}
         onOpenInfo={() => setIsInfoOpen(true)}
         onOpenVideo={() => setIsVideoOpen(true)}
       />

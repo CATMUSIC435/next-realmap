@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { slugify } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -8,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Loader2, ExternalLink, Image as ImageIcon, Calendar as CalendarIcon, MapPin as MapPinIcon } from "lucide-react";
 
 interface SingleProjectVideoSheetProps {
   slug: string;
@@ -79,6 +80,50 @@ function NewsCard({ link, idx, getNewsTitle }: { link: string; idx: number; getN
   );
 }
 
+// Component con hiển thị thẻ sự kiện
+function EventCard({ event, index, projectSlug }: { event: any; index: number; projectSlug: string }) {
+  const bgImg = event.banner_event?.url || '/images/default.jpg';
+  const eventTitle = event.name_event || `Sự kiện ${index + 1}`;
+  
+  const targetLocationLink = projectSlug 
+    ? `/du-an/${projectSlug}/${slugify(eventTitle)}` 
+    : event.location_events ? `https://www.google.com/maps/search/?api=1&query=${event.location_events.replace(/\s/g, '')}` : "#";
+
+  return (
+    <div className="flex flex-col rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all group bg-white h-full relative">
+      <div className="relative w-full aspect-[16/9] bg-gray-100 flex items-center justify-center overflow-hidden border-b border-gray-100">
+        <img src={bgImg} alt={eventTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+      </div>
+      <div className="p-4 sm:p-5 flex flex-col flex-1">
+        {event.time_event && (
+          <span className="text-[10px] sm:text-xs font-bold text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <CalendarIcon className="w-3.5 h-3.5" />
+            {event.time_event}
+          </span>
+        )}
+        <h3 className="text-gray-900 font-bold text-base sm:text-lg leading-snug group-hover:text-blue-700">
+          {eventTitle}
+        </h3>
+        {event.description_event && (
+          <p className="text-gray-500 text-sm mt-3 line-clamp-3 leading-relaxed flex-1">
+            {event.description_event}
+          </p>
+        )}
+        <a
+          href={targetLocationLink}
+          target={projectSlug ? "_self" : "_blank"}
+          rel={projectSlug ? "" : "noopener noreferrer"}
+          className="mt-4 flex items-center justify-center gap-2 py-2.5 px-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg transition-colors w-full"
+          title={projectSlug ? "Xem Bản đồ Sự kiện" : "Định vị"}
+        >
+          <MapPinIcon className="w-4 h-4 text-blue-600" />
+          {projectSlug ? "Bản Đồ Chỉ Đường" : "Địa Điểm Tổ Chức"}
+        </a>
+      </div>
+    </div>
+  );
+}
+
 const SingleProjectVideoSheet = ({
   slug,
   isOpen,
@@ -144,6 +189,16 @@ const SingleProjectVideoSheet = ({
   const ttVideos = parseLinks(acf.video_tiktok);
   const newsLinks = parseLinks(acf.tin_tuc); // Thay thế key đúng với cấu hình ACF của bạn
   const fbLinks = parseLinks(acf.facebook_post); // Thay thế key đúng với cấu hình ACF của bạn
+  const eventsData = projectData?.events || acf?.events || [];
+
+  const navTabs = [
+    { id: "video", label: "Video Review", count: ytVideos.length + ttVideos.length },
+    { id: "news", label: "Tin tức", count: newsLinks.length },
+    { id: "facebook", label: "Facebook Post", count: fbLinks.length }
+  ];
+  if (eventsData.length > 0) {
+    navTabs.push({ id: "events", label: "Sự kiện", count: eventsData.length });
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -175,23 +230,24 @@ const SingleProjectVideoSheet = ({
               
               {/* Tabs Navigation */}
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
-                {[
-                  { id: "video", label: "Video Review" },
-                  { id: "news", label: "Tin tức" },
-                  { id: "facebook", label: "Facebook Post" }
-                ].map((tab) => {
+                {navTabs.map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`pb-3 text-sm sm:text-base font-bold transition-all duration-300 uppercase tracking-wider relative whitespace-nowrap outline-none
+                      className={`pb-3 text-sm sm:text-base font-bold transition-all duration-300 uppercase tracking-wider relative whitespace-nowrap outline-none flex items-center gap-1.5
                         ${isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}
                       `}
                     >
                       {tab.label}
+                      {tab.count > 0 && (
+                        <span className={`text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                          {tab.count}
+                        </span>
+                      )}
                       {isActive && (
-                        <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-blue-600 rounded-t-md shadow-[0_0_10px_rgba(37,99,235,0.5)]"></span>
+                         <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-blue-600 rounded-t-md shadow-[0_0_10px_rgba(37,99,235,0.5)]"></span>
                       )}
                     </button>
                   );
@@ -363,6 +419,17 @@ const SingleProjectVideoSheet = ({
                           })}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* TAB SỰ KIỆN */}
+                  {activeTab === "events" && eventsData.length > 0 && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+                        {eventsData.map((evt: any, idx: number) => (
+                          <EventCard key={idx} event={evt} index={idx} projectSlug={slug} />
+                        ))}
+                      </div>
                     </div>
                   )}
 

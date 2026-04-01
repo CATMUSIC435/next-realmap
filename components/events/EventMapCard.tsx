@@ -1,40 +1,37 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Navigation, Map as MapIcon, Youtube, ExternalLink, MessageCircle, ChevronUp } from "lucide-react";
+import { Loader2, Navigation, Map as MapIcon, ChevronUp, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
-interface SingleMapCardProps {
-  project: any;
+interface EventMapCardProps {
+  event: any;
+  projectSlug: string;
+  projectName: string;
   distance: string | null;
   isRouting: boolean;
-  routeType?: 'project' | 'model';
-  onRouteTypeChange?: (type: 'project' | 'model') => void;
   onDrawRoute: () => void;
   onOpenGoogleMaps: () => void;
-  onOpenInfo: () => void;
-  onOpenVideo?: () => void;
   onOpenGrab?: () => void;
   onOpenXanhSM?: () => void;
 }
 
-export default function SingleMapCard({
-  project,
+export default function EventMapCard({
+  event,
+  projectSlug,
+  projectName,
   distance,
   isRouting,
-  routeType = 'project',
-  onRouteTypeChange,
   onDrawRoute,
   onOpenGoogleMaps,
-  onOpenInfo,
-  onOpenVideo,
   onOpenGrab,
   onOpenXanhSM
-}: SingleMapCardProps) {
+}: EventMapCardProps) {
   const [showMapMenu, setShowMapMenu] = useState(false);
   const mapMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (mapMenuRef.current && !mapMenuRef.current.contains(event.target as Node)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (mapMenuRef.current && !mapMenuRef.current.contains(e.target as Node)) {
         setShowMapMenu(false);
       }
     }
@@ -43,51 +40,34 @@ export default function SingleMapCard({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  const hasModel = !!project.acf?.vị_tri_nha_mẫu;
 
-  let displayLocationText = project.acf?.gt_slogan || project.acf?.khu_vuc || "Vị trí dự án";
-  if (routeType === 'model' && hasModel) {
-    displayLocationText = "Khu vực nhà mẫu";
-  }
+  const eventTitle = event.name_event || "Sự kiện";
+  const displayLocationText = event.description_event || "Chỉ đường đến sự kiện";
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 w-[96%] max-w-[480px] bg-white/95 backdrop-blur-md p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center justify-between gap-1.5 sm:gap-2 border border-gray-100">
       <div className="flex-1 min-w-0 pr-1.5 sm:pr-2 border-r border-gray-200">
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 pr-1">
-          <h1 className="text-[13px] sm:text-base font-bold text-gray-900 truncate">
-            {project.title?.rendered || project.title || "Tên dự án"}
+        <div className="flex flex-col">
+          <Link href={`/du-an/${projectSlug}`} className="text-[10px] text-blue-600 font-bold uppercase hover:underline flex items-center gap-1 mb-1 w-fit">
+            <ArrowLeft className="w-3 h-3" />
+            {projectName}
+          </Link>
+          <h1 className="text-[13px] sm:text-base font-bold text-gray-900 truncate" title={eventTitle}>
+            {eventTitle}
           </h1>
-          {project.acf?.link_page && (
-            <a 
-              href={project.acf.link_page.startsWith('http') ? project.acf.link_page : `https://${project.acf.link_page}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 rounded p-1 transition-colors border border-blue-200"
-              title="Lướt xem Web Dự Án"
-            >
-              <ExternalLink className="w-3 h-3" />
-            </a>
+          {event.time_event && (
+            <span className="text-[10px] sm:text-[11px] font-bold text-rose-600 uppercase tracking-widest mt-1 flex items-center gap-1">
+              <CalendarIcon className="w-3 h-3" />
+              {event.time_event}
+            </span>
           )}
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-1 truncate flex items-center gap-1">
+            {distance ? (
+              <span className="font-semibold text-blue-600 bg-blue-50 px-1 py-0.5 rounded">{distance}</span>
+            ) : null}
+            <span className="truncate">{displayLocationText}</span>
+          </p>
         </div>
-        <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 truncate flex items-center gap-1">
-          {distance ? (
-            <span className="font-semibold text-blue-600 bg-blue-50 px-1 py-0.5 rounded">{distance}</span>
-          ) : null}
-          <span className="truncate">{displayLocationText}</span>
-        </p>
-
-        {hasModel && onRouteTypeChange && (
-          <div className="flex gap-2 mt-1.5 bg-gray-100 p-0.5 rounded-md w-fit">
-            <button 
-              onClick={() => onRouteTypeChange('project')}
-              className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${routeType === 'project' ? 'bg-white shadow-sm font-bold text-blue-600' : 'text-gray-500 hover:bg-gray-200'}`}
-            >Vị trí</button>
-            <button 
-              onClick={() => onRouteTypeChange('model')}
-              className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${routeType === 'model' ? 'bg-white shadow-sm font-bold text-rose-600' : 'text-gray-500 hover:bg-gray-200'}`}
-            >Nhà mẫu</button>
-          </div>
-        )}
       </div>
       
       <div className="flex shrink-0 gap-1 sm:gap-2 pl-1.5 sm:pl-0">
@@ -101,39 +81,6 @@ export default function SingleMapCard({
         >
           {isRouting ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />}
         </Button>
-
-        <Button 
-          onClick={onOpenInfo}
-          variant="secondary"
-          size="icon"
-          title="Thông tin dự án"
-          className="rounded-[10px] sm:rounded-xl h-9 w-9 sm:h-11 sm:w-11 border border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-gray-700 font-medium"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        </Button>
-
-        {(project.acf?.video_tiktok || project.acf?.video_youtube || project.acf?.tin_tuc || project.acf?.facebook_post) && (
-          <Button 
-            onClick={onOpenVideo}
-            variant="outline"
-            size="icon"
-            title="Thư Viện Truyền Thông"
-            className="rounded-[10px] sm:rounded-xl h-9 w-9 sm:h-11 sm:w-11 border-gray-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 hover:border-red-200 relative group overflow-hidden"
-          >
-            <Youtube className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-            <span className="absolute top-1 right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full animate-pulse border sm:border-2 border-white"></span>
-          </Button>
-        )}
-
-        <a 
-          href="https://zalo.me/s/1063372571544397499/"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Zalo Mini App"
-          className="inline-flex items-center justify-center rounded-[10px] sm:rounded-xl h-9 w-9 sm:h-11 sm:w-11 border-gray-200 border bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-200 transition-colors shrink-0"
-        >
-          <span className="font-extrabold text-[10px] sm:text-[11px] tracking-tight">Zalo</span>
-        </a>
 
         <div className="relative" ref={mapMenuRef}>
           <Button 

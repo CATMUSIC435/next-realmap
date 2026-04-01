@@ -74,7 +74,7 @@ const MapboxExample = ({ lat, lng }) => {
 
     mapRef.current = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/mapbox/standard",
+      style: "mapbox://styles/mapbox/streets-v12",
       center: [lng, lat],
       zoom: 12,
     });

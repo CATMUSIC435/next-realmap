@@ -86,8 +86,8 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
                   }`}>
                     {project.title}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5">
-                    {project.originalData?.acf?.vị_tri ? project.originalData.acf.vị_tri.split(',')[0] : "Đang cập nhật vị trí"}
+                  <p className="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5" title={project.originalData?.acf?.gt_slogan || project.originalData?.acf?.khu_vuc || "Đang cập nhật khu vực"}>
+                    {project.originalData?.acf?.gt_slogan || project.originalData?.acf?.khu_vuc || "Đang cập nhật khu vực"}
                   </p>
                 </div>
               </div>
