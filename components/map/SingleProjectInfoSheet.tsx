@@ -120,6 +120,8 @@ const SingleProjectInfoSheet = ({
                       src={acf.banner_img || acf.logo || '/images/default.jpg'}
                       alt={projectData.title?.rendered || "Dự án"}
                       fill
+                      sizes="(max-width: 1024px) 100vw, 900px"
+                      priority
                       className="object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
@@ -152,7 +154,12 @@ const SingleProjectInfoSheet = ({
                       )}
                       <p className="text-sm sm:text-base text-gray-200 flex items-center gap-2 opacity-95 drop-shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        {acf.vị_tri || acf.gt_location || "Đang cập nhật vị trí"}
+                        {(() => {
+                          const text = acf.gt_location || acf.vị_tri || "";
+                          const isCoord = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(text);
+                          if (isCoord || !text) return "Đang cập nhật vị trí";
+                          return text;
+                        })()}
                       </p>
                     </div>
                   </div>

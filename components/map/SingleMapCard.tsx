@@ -26,19 +26,21 @@ export default function SingleMapCard({
 }: SingleMapCardProps) {
   const hasModel = !!project.acf?.vị_tri_nha_mẫu;
 
-  const displayLocationText = routeType === 'model' && hasModel 
-    ? project.acf.vị_tri_nha_mẫu 
-    : project.acf?.vị_tri || "Đang cập nhật vị trí";
+  const displayLocationText = (() => {
+    if (routeType === 'model' && hasModel) return project.acf.vị_tri_nha_mẫu;
+    const text = project.acf?.gt_location || project.acf?.vị_tri || "";
+    const isCoord = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(text);
+    if (isCoord || !text) return "Đang cập nhật vị trí";
+    return text.split(',')[0];
+  })();
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 w-[96%] max-w-[480px] bg-white/95 backdrop-blur-md p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center justify-between gap-1.5 sm:gap-2 border border-gray-100">
       <div className="flex-1 min-w-0 pr-1.5 sm:pr-2 border-r border-gray-200">
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 pr-1">
-          <h1 className="text-[13px] sm:text-base font-bold text-gray-900 truncate">
-            {project.title?.rendered || project.title || "Tên dự án"}
-          </h1>
+          <h1 className="text-[13px] sm:text-base font-bold text-gray-900 truncate" dangerouslySetInnerHTML={{ __html: project.title?.rendered || project.title || "Tên dự án" }}></h1>
           {project.acf?.link_page && (
-            <a 
+            <a
               href={project.acf.link_page.startsWith('http') ? project.acf.link_page : `https://${project.acf.link_page}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -58,20 +60,20 @@ export default function SingleMapCard({
 
         {hasModel && onRouteTypeChange && (
           <div className="flex gap-2 mt-1.5 bg-gray-100 p-0.5 rounded-md w-fit">
-            <button 
+            <button
               onClick={() => onRouteTypeChange('project')}
               className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${routeType === 'project' ? 'bg-white shadow-sm font-bold text-blue-600' : 'text-gray-500 hover:bg-gray-200'}`}
             >Vị trí</button>
-            <button 
+            <button
               onClick={() => onRouteTypeChange('model')}
               className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${routeType === 'model' ? 'bg-white shadow-sm font-bold text-rose-600' : 'text-gray-500 hover:bg-gray-200'}`}
             >Nhà mẫu</button>
           </div>
         )}
       </div>
-      
+
       <div className="flex shrink-0 gap-1 sm:gap-2 pl-1.5 sm:pl-0">
-        <Button 
+        <Button
           onClick={onDrawRoute}
           disabled={isRouting}
           variant="default"
@@ -82,18 +84,18 @@ export default function SingleMapCard({
           {isRouting ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />}
         </Button>
 
-        <Button 
+        <Button
           onClick={onOpenInfo}
           variant="secondary"
           size="icon"
           title="Thông tin dự án"
           className="rounded-[10px] sm:rounded-xl h-9 w-9 sm:h-11 sm:w-11 border border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-gray-700 font-medium"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
         </Button>
 
         {(project.acf?.video_tiktok || project.acf?.video_youtube || project.acf?.tin_tuc || project.acf?.facebook_post) && (
-          <Button 
+          <Button
             onClick={onOpenVideo}
             variant="outline"
             size="icon"
@@ -105,7 +107,7 @@ export default function SingleMapCard({
           </Button>
         )}
 
-        <a 
+        <a
           href="https://zalo.me/s/1063372571544397499/"
           target="_blank"
           rel="noopener noreferrer"
@@ -115,7 +117,7 @@ export default function SingleMapCard({
           <span className="font-extrabold text-[10px] sm:text-[11px] tracking-tight">Zalo</span>
         </a>
 
-        <Button 
+        <Button
           onClick={onOpenGoogleMaps}
           variant="outline"
           size="icon"

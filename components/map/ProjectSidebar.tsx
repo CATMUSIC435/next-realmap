@@ -74,7 +74,11 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
                 onClick={() => {
                   setHighlightedId(project.id);
                   setSelectedProject(project);
-                  setIsSheetOpen(true);
+                  if (window.innerWidth < 768) {
+                    setIsSidebarOpen(false);
+                  } else {
+                    setIsSheetOpen(true);
+                  }
                 }}
               >
                 <div className="relative w-[52px] h-[38px] sm:w-[64px] sm:h-[48px] rounded-lg overflow-hidden shrink-0 shadow-sm border border-gray-100">
@@ -87,7 +91,12 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
                     {project.title}
                   </h3>
                   <p className="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5">
-                    {project.originalData?.acf?.vị_tri ? project.originalData.acf.vị_tri.split(',')[0] : "Đang cập nhật vị trí"}
+                    {(() => {
+                      const text = project.originalData?.acf?.gt_location || project.originalData?.acf?.vị_tri || "";
+                      const isCoord = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(text);
+                      if (isCoord || !text) return "Đang cập nhật vị trí";
+                      return text.split(',')[0];
+                    })()}
                   </p>
                 </div>
               </div>

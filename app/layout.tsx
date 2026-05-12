@@ -24,6 +24,22 @@ export const metadata: Metadata = {
     apple: "https://dxmdvietnam.vn/files/2022/07/favicon-dxmd-vietnam.png",
   },
   description: "Trải nghiệm bản đồ dự án bất động sản tương tác 3D. Khám phá các dự án tiềm năng, xem thông tin nhà mẫu, video review và nhận chỉ đường chính xác.",
+  keywords: ["bản đồ bất động sản", "DXMD Vietnam", "bản đồ dự án", "bất động sản 3D", "real estate map", "nhà mẫu"],
+  authors: [{ name: "DXMD Vietnam" }],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -56,6 +72,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

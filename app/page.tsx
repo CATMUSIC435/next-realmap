@@ -1,4 +1,4 @@
-import MapBox from "@/components/map-box";
+import MapBoxDynamic from "@/components/MapBoxDynamic";
 
 export default function Home() {
 
@@ -7,7 +7,7 @@ export default function Home() {
     <div className="flex min-h-screen items-center justify-center font-sans dark:bg-black">
       <main className="flex min-h-screen w-full flex-col items-center justify-between bg-white dark:bg-black sm:items-start">
         <div className="h-screen w-screen">
-          <MapBox
+          <MapBoxDynamic
             lat={position.lat}
             lng={position.lng}
           />

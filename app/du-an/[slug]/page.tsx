@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import SingleMap from "@/components/single-map";
+import SingleMapDynamic from "@/components/SingleMapDynamic";
 import { notFound } from "next/navigation";
 import { Metadata, ResolvingMetadata } from "next";
 
@@ -26,6 +26,10 @@ export async function generateMetadata(
     return {
       title: `Vị trí dự án ${titleText}`,
       description: descriptionText,
+      keywords: [titleText, `vị trí ${titleText}`, `dự án ${titleText}`, `bản đồ ${titleText}`, "DXMD Vietnam"],
+      alternates: {
+        canonical: `/du-an/${slug}`,
+      },
       openGraph: {
         title: `Vị trí bản đồ và thông tin dự án ${titleText}`,
         description: descriptionText,
@@ -95,7 +99,7 @@ export default async function ProjectSingleMapPage({ params }: { params: Promise
     return (
       <div className="h-screen w-screen bg-gray-50 overflow-hidden">
         <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-gray-100"><div className="w-8 h-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div></div>}>
-          <SingleMap 
+          <SingleMapDynamic 
             project={cleanProject} 
             lat={coords.lat} 
             lng={coords.lng} 

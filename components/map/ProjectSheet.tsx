@@ -10,7 +10,7 @@ export default function ProjectSheet() {
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <SheetContent side="right" className="w-[400px] sm:w-[500px] overflow-y-auto no-scrollbar font-sans border-l border-gray-100 shadow-2xl p-0">
+      <SheetContent side="right" className="w-[100vw] sm:w-[400px] md:w-[500px] overflow-y-auto no-scrollbar font-sans border-l border-gray-100 shadow-2xl p-0">
         {selected && (
           <div className="flex flex-col">
             <div className="relative w-full aspect-[4/3] bg-gray-100">
@@ -18,6 +18,8 @@ export default function ProjectSheet() {
                 src={selected.originalData?.acf?.banner_img || selected.image}
                 alt={selected.title}
                 fill
+                sizes="(max-width: 768px) 100vw, 500px"
+                priority
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
@@ -37,7 +39,12 @@ export default function ProjectSheet() {
                 )}
                 <p className="text-sm text-gray-200 flex items-center gap-1.5 opacity-90 drop-shadow-md">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                  {selected.originalData?.acf?.vị_tri || selected.originalData?.acf?.gt_location || "Đang cập nhật vị trí"}
+                  {(() => {
+                    const text = selected.originalData?.acf?.gt_location || selected.originalData?.acf?.vị_tri || "";
+                    const isCoord = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(text);
+                    if (isCoord || !text) return "Đang cập nhật vị trí";
+                    return text;
+                  })()}
                 </p>
               </div>
             </div>
