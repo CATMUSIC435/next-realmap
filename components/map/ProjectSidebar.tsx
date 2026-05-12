@@ -23,10 +23,9 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
   return (
     <>
       {/* Nút mở Sidebar khi bị ẩn */}
-      <div 
-        className={`absolute top-4 left-4 z-10 transition-all duration-500 transform ${
-          !isSidebarOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`absolute top-4 left-4 z-10 transition-all duration-500 transform ${!isSidebarOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'
+          }`}
       >
         <Button
           variant="outline"
@@ -40,10 +39,9 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
       </div>
 
       {/* Sidebar danh sách dự án */}
-      <div 
-        className={`absolute top-4 left-4 bottom-4 w-[240px] sm:w-[280px] z-10 transition-all duration-500 ease-in-out origin-left ${
-          isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0 pointer-events-none scale-95'
-        }`}
+      <div
+        className={`absolute top-4 left-4 bottom-4 w-[240px] sm:w-[280px] z-10 transition-all duration-500 ease-in-out origin-left ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0 pointer-events-none scale-95'
+          }`}
       >
         <div className="h-full bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-white/60">
           <div className="p-3 sm:p-4 border-b border-gray-200/60 bg-white/50 flex items-center gap-1.5 sm:gap-2">
@@ -54,11 +52,11 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-gray-500 rounded-lg hover:bg-gray-200/50 transition-colors" 
-              onClick={() => setIsSidebarOpen(false)} 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 text-gray-500 rounded-lg hover:bg-gray-200/50 transition-colors"
+              onClick={() => setIsSidebarOpen(false)}
               title="Thu gọn"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -68,9 +66,8 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 border-b border-gray-100/80 cursor-pointer transition-all hover:bg-gray-50/90 ${
-                  highlightedId === project.id ? 'bg-blue-50/80 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
-                }`}
+                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 border-b border-gray-100/80 cursor-pointer transition-all hover:bg-gray-50/90 ${highlightedId === project.id ? 'bg-blue-50/80 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
+                  }`}
                 onClick={() => {
                   setHighlightedId(project.id);
                   setSelectedProject(project);
@@ -85,9 +82,8 @@ export default function ProjectSidebar({ filteredProjects }: ProjectSidebarProps
                   <Image src={project.image} alt={project.title} fill sizes="(max-width: 640px) 52px, 64px" className="object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-[13px] sm:text-sm truncate transition-colors ${
-                    highlightedId === project.id ? 'text-blue-700' : 'text-gray-800'
-                  }`}>
+                  <h3 className={`font-semibold text-[13px] sm:text-sm truncate transition-colors ${highlightedId === project.id ? 'text-blue-700' : 'text-gray-800'
+                    }`}>
                     {project.title}
                   </h3>
                   <p className="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5">

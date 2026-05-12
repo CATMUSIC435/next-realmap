@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Navigation, Map as MapIcon, Youtube, ExternalLink, MessageCircle } from "lucide-react";
+import { Loader2, Navigation, Map as MapIcon, Youtube, ExternalLink, MessageCircle, ChevronUp } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 interface SingleMapCardProps {
   project: any;
@@ -11,6 +12,8 @@ interface SingleMapCardProps {
   onOpenGoogleMaps: () => void;
   onOpenInfo: () => void;
   onOpenVideo?: () => void;
+  onOpenGrab?: () => void;
+  onOpenXanhSM?: () => void;
 }
 
 export default function SingleMapCard({
@@ -22,8 +25,24 @@ export default function SingleMapCard({
   onDrawRoute,
   onOpenGoogleMaps,
   onOpenInfo,
-  onOpenVideo
+  onOpenVideo,
+  onOpenGrab,
+  onOpenXanhSM
 }: SingleMapCardProps) {
+  const [showMapMenu, setShowMapMenu] = useState(false);
+  const mapMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mapMenuRef.current && !mapMenuRef.current.contains(event.target as Node)) {
+        setShowMapMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const hasModel = !!project.acf?.vị_tri_nha_mẫu;
 
   const displayLocationText = (() => {
